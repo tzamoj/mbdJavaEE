@@ -4,113 +4,73 @@ import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 import editorUser.Observer;
 
+@Path("/editor")
 public class EditorEngineImpl implements EditorEngine {
 	
-	private StringBuffer contents = new StringBuffer("");
-	private String clipboard="";
-	private int selectionStart;
-	private int selectionLength;
-	private List<Observer> obs = new ArrayList<Observer>();
-	private boolean textFlag = false;
+	public EditorEngineImpl(){
+		EngineSingleton.getInstance().init();
+	}
 	
 	@Override
+	@POST
 	public void cut() {
-		if(selectionLength>0){
-			copy();
-			deleteSelection();
-			textNotify();
-			selectionNotify();
-		}
+		EngineSingleton.getInstance().cut();
 	}
 
 	@Override
+	@POST
 	public void copy() {
-		if(selectionLength>0){
-			clipboard = contents.substring(selectionStart, selectionStart+selectionLength);
-		}
+		EngineSingleton.getInstance().copy();
 	}
 
 	@Override
+	@GET
+	@Path("/paste")
 	public void paste() { 
-		insert(clipboard);
+		EngineSingleton.getInstance().paste();
 	}
 
 	@Override
+	@POST
 	public void setSelection(Integer start, Integer length) {
-		if(textFlag){
-			//Ignore the call.
-		}
-		else{
-			selectionStart = start.intValue();
-			selectionLength = length.intValue();
-			selectionNotify();
-		}
+		EngineSingleton.getInstance().setSelection(start, length);
 	}
 	
-	public void unSelect(){
-		selectionLength = 0;
-	}
-
 	@Override
+	@POST
 	public void insert(String s) {
-		deleteSelection(); 
-		contents.insert(selectionStart, s);
-		selectionStart = selectionStart + s.length();
-		textNotify();
-		selectionNotify();
+		EngineSingleton.getInstance().insert(s);
 	}
 
 	@Override
+	@GET
+	@Path("/contents")
+	@Produces(MediaType.TEXT_HTML)
 	public String contents() {
-		return contents.toString();
-	}
-	
-	// should test that if selectionLength==0 then nothing is done.
-	public void deleteSelection(){
-		contents.delete(selectionStart, selectionStart+selectionLength);
-		unSelect();
+		return EngineSingleton.getInstance().contents();
 	}
 	
 	@Override
+	@GET
 	public void evaluate(){
-		// Connect to Renjin
+		EngineSingleton.getInstance().evaluate();
 	}
 	
 	@Override
 	public void addObserver(Observer o){
-		if(!obs.contains(o)){
-			obs.add(o);
-		}
+		EngineSingleton.getInstance().addObserver(o);
 	}
 	
 	@Override
 	public void removeObserver(Observer o){
-		if(obs.contains(o)){
-			obs.remove(o);
-		}
-	}
-	
-	private void textNotify(){
-		for (Observer o : obs)
-			try {
-				textFlag = true;
-				o.textUpdate(this.contents());
-				textFlag = false;
-			} catch (RemoteException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-	}
-	
-	private void selectionNotify(){
-		for (Observer o : obs)
-			try {
-				o.selectionUpdate(this.selectionStart,this.selectionLength);
-			} catch (RemoteException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+		EngineSingleton.getInstance().removeObserver(o);
 	}
 }
