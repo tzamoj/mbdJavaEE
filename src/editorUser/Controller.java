@@ -5,6 +5,13 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.logging.Logger;
 
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+
 import editorEngine.EditorEngine;
 import javafx.scene.Scene;
 import javafx.scene.control.IndexRange;
@@ -28,6 +35,9 @@ public class Controller extends UnicastRemoteObject implements Observer {
 	}
 
 	private EditorEngine remoteEngine;
+	private Client restClient;
+	private final String URL="http://localhost:8080/editor";
+	private String command;
 	private BorderPane root;
 
 	private TextArea inputArea;
@@ -43,6 +53,7 @@ public class Controller extends UnicastRemoteObject implements Observer {
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		};
+		restClient = ClientBuilder.newClient();		
 	}
 
 	public void buildGUI() {
@@ -56,12 +67,17 @@ public class Controller extends UnicastRemoteObject implements Observer {
 
 	private void buildTexts() {
 		inputArea = new TextArea();
-		//inputArea.setText("");
-		try{
+		/*try{
 			inputArea.setText(remoteEngine.contents());
 		}catch (RemoteException e){
 			e.printStackTrace();
+		}*/
+		WebTarget contentsTarget = restClient.target(URL).path("/contents");
+		Response resp = contentsTarget.request().get();
+		if(resp.getStatus()!=200){
+			throw new RuntimeException();
 		}
+		inputArea.setText((String) resp.getEntity());
 		inputArea.setStyle("-fx-text-fill: blue");
 		inputArea.setEditable(false);
 		inputArea.selectionProperty().addListener((obsValue,oldRange,newRange) -> getSelection(newRange));
@@ -77,22 +93,28 @@ public class Controller extends UnicastRemoteObject implements Observer {
 
 	private void getTypedKey(KeyEvent keyEvent) {
 		Logger.getGlobal().info(keyEvent.getCharacter());
-		try {
+
+		WebTarget contentsTarget = restClient.target(URL).path("/insert");
+		Response resp = contentsTarget.request().post(Entity.entity(keyEvent.getCharacter(), MediaType.APPLICATION_JSON));
+		if(resp.getStatus()!=200){
+			throw new RuntimeException();
+		}
+		/*try {
 			remoteEngine.insert(keyEvent.getCharacter());
 		} catch (RemoteException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
+		}*/
 	}
 
 	private void getSelection(IndexRange newRange) {
 		Logger.getGlobal().info(String.format("Start %d, end %d",newRange.getStart(),newRange.getLength()));
-		try {
+		/*try {
 			remoteEngine.setSelection(newRange.getStart(),newRange.getLength());
 		} catch (RemoteException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
+		}*/
 	}
 
 	private void buildMenus() {
@@ -127,39 +149,39 @@ public class Controller extends UnicastRemoteObject implements Observer {
 	}
 
 	private void evaluate() {
-		try {
+		/*try {
 			remoteEngine.evaluate();
 		} catch (RemoteException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
+		}*/
 	}
 
 	private void paste() {
-		try {
+		/*try {
 			remoteEngine.paste();
 		} catch (RemoteException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
+		}*/
 	}
 
 	private void copy() {
-		try {
+		/*try {
 			remoteEngine.copy();
 		} catch (RemoteException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
+		}*/
 	}
 
 	private void cut() {
-		try {
+		/*try {
 			remoteEngine.cut();
 		} catch (RemoteException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
+		}*/
 	}
 
 	public void run() {

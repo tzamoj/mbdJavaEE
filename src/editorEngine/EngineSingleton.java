@@ -37,7 +37,7 @@ public class EngineSingleton implements EditorEngine {
 	private List<Observer> obs = new ArrayList<Observer>();
 	private boolean textFlag = false;
 	
-	@Override
+	//@Override
 	public void cut() {
 		if(selectionLength>0){
 			copy();
@@ -47,20 +47,20 @@ public class EngineSingleton implements EditorEngine {
 		}
 	}
 
-	@Override
+	//@Override
 	public void copy() {
 		if(selectionLength>0){
 			clipboard = contents.substring(selectionStart, selectionStart+selectionLength);
 		}
 	}
 
-	@Override
+	//@Override
 	public void paste() { 
 		//insert(clipboard);
 		System.out.println("Pasting");
 	}
 
-	@Override
+	//@Override
 	public void setSelection(Integer start, Integer length) {
 		if(textFlag){
 			//Ignore the call.
@@ -76,7 +76,7 @@ public class EngineSingleton implements EditorEngine {
 		selectionLength = 0;
 	}
 
-	@Override
+	//@Override
 	public void insert(String s) {
 		deleteSelection(); 
 		contents.insert(selectionStart, s);
@@ -85,7 +85,7 @@ public class EngineSingleton implements EditorEngine {
 		selectionNotify();
 	}
 
-	@Override
+	//@Override
 	public String contents() {
 		//return contents.toString();
 		return "<HTML><BODY>I am doing fine</BODY></HTML>";
@@ -97,7 +97,7 @@ public class EngineSingleton implements EditorEngine {
 		unSelect();
 	}
 	
-	@Override
+	//@Override
 	public void evaluate(){
 		// Connect to Renjin
 	}
