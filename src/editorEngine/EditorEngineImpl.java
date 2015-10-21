@@ -19,27 +19,38 @@ public class EditorEngineImpl implements EditorEngine {
 	
 	//@Override
 	@POST
-	public void cut() {
+	@Path("/cut")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response cut() {
 		EngineSingleton.getInstance().cut();
+		return Response.ok().build();
 	}
 
 	//@Override
 	@POST
-	public void copy() {
+	@Path("/copy")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response copy() {
 		EngineSingleton.getInstance().copy();
+		return Response.ok().build();
 	}
 
 	//@Override
 	@GET
 	@Path("/paste")
-	public void paste() { 
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response paste() { 
 		EngineSingleton.getInstance().paste();
+		return Response.ok().build();
 	}
 
 	//@Override
 	@POST
-	public void setSelection(Integer start, Integer length) {
+	@Path("/setSelection")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response setSelection(Integer start, Integer length) {
 		EngineSingleton.getInstance().setSelection(start, length);
+		return Response.ok().build();
 	}
 	
 	//@Override
@@ -55,15 +66,18 @@ public class EditorEngineImpl implements EditorEngine {
 	//@Override
 	@GET
 	@Path("/contents")
-	@Produces(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.TEXT_PLAIN)
 	public Response contents() {
 		return Response.ok(EngineSingleton.getInstance().contents()).build();
 	}
 	
 	//@Override
 	@GET
-	public void evaluate(){
+	@Path("/evaluate")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response evaluate(){
 		EngineSingleton.getInstance().evaluate();
+		return Response.ok().build();
 	}
 	
 	@Override

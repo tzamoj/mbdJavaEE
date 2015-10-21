@@ -4,6 +4,7 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.rmi.Remote;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,23 +12,27 @@ import editorUser.Observer;
 
 public class EngineSingleton implements EditorEngine {
 	// Singleton design
-	static EngineSingleton instance = new EngineSingleton();
+	static EngineSingleton instance = null;
 	public static EngineSingleton getInstance() {
+		System.out.println("Get Singleton");
+		if(instance==null){
+			instance = new EngineSingleton();
+			if (System.getSecurityManager() == null)
+				System.setSecurityManager(new SecurityManager());
+			try {
+				Registry rmiRegistry = LocateRegistry.createRegistry(9999);
+				//EditorEngine rmiService = (EditorEngine) UnicastRemoteObject
+					//	.exportObject(instance, 9999);
+				rmiRegistry.bind("engine", (Remote) instance);
+			} catch (Exception ex) {
+				ex.printStackTrace();
+			}
+		}
 		return instance;
 	}
 	
 	// On initialisation, register the engine to RMIregistry.
-	public void init(){
-		if (System.getSecurityManager() == null)
-            System.setSecurityManager(new SecurityManager());
-        try {
-            Registry rmiRegistry = LocateRegistry.createRegistry(9999);
-            EditorEngine rmiService = (EditorEngine) UnicastRemoteObject
-                    .exportObject(this, 9999);
-            rmiRegistry.bind("engine", rmiService);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
+	public void init(){		
 	}
 
 	private StringBuffer contents = new StringBuffer("");
@@ -83,12 +88,13 @@ public class EngineSingleton implements EditorEngine {
 		selectionStart = selectionStart + s.length();
 		textNotify();
 		selectionNotify();
+		System.out.println("inserting a character");
 	}
 
 	//@Override
 	public String contents() {
 		//return contents.toString();
-		return "<HTML><BODY>I am doing fine</BODY></HTML>";
+		return "I am doing fine";
 	}
 	
 	// should test that if selectionLength==0 then nothing is done.

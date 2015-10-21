@@ -44,28 +44,24 @@ public class Controller extends UnicastRemoteObject implements Observer {
 	private Text outputArea;
 
 	public Controller() throws RemoteException{
-		if (System.getSecurityManager() == null)
-			System.setSecurityManager(new SecurityManager());
-		try {
-			remoteEngine = (EditorEngine) Naming
-					.lookup("//localhost:9999/engine");
-			remoteEngine.addObserver((Observer) this);
-		} catch (Exception ex) {
-			ex.printStackTrace();
-		};
-		restClient = ClientBuilder.newClient();		
+		restClient = ClientBuilder.newClient();
 	}
 
 	public void buildGUI() {
 		root = new BorderPane();
 		buildMenus();
-		buildTexts();
+		try{
+			buildTexts();
+		}catch(RemoteException e){
+			System.err.println("The communication with the rmiRegistry or the engine seems to be broken: verify the registry and engine are up and registered.");
+			e.printStackTrace();
+		}
 
 		primaryStage.setTitle("SimpleEditor");
 		primaryStage.setScene(new Scene(root, 300, 275));
 	}
 
-	private void buildTexts() {
+	private void buildTexts() throws RemoteException {
 		inputArea = new TextArea();
 		/*try{
 			inputArea.setText(remoteEngine.contents());
@@ -78,6 +74,16 @@ public class Controller extends UnicastRemoteObject implements Observer {
 			throw new RuntimeException();
 		}
 		inputArea.setText((String) resp.getEntity());
+		if (System.getSecurityManager() == null)
+			System.setSecurityManager(new SecurityManager());
+		try {
+			remoteEngine = (EditorEngine) Naming
+					.lookup("//localhost:9999/engine");
+			remoteEngine.addObserver((Observer) this);
+		} catch (Exception ex) {
+			System.err.println("The communication with the rmiRegistry or the engine seems to be broken: verify the registry and engine are up and registered.");
+			ex.printStackTrace();
+		};
 		inputArea.setStyle("-fx-text-fill: blue");
 		inputArea.setEditable(false);
 		inputArea.selectionProperty().addListener((obsValue,oldRange,newRange) -> getSelection(newRange));
