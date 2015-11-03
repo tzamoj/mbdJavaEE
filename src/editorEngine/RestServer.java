@@ -22,6 +22,10 @@ public class RestServer {
         );
 
         logger.info("JAX-RS based micro-service running!");
+        
+        // Could launch Singleton, Renjin and persistance, but for efficiency better do it if there is at least one client.  
+        //EngineSingleton.getInstance();
+        //logger.info("Singleton is up");
     }
 }
 

@@ -12,6 +12,8 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.renjin.sexp.SEXP;
+
 import editorEngine.EditorEngine;
 import javafx.scene.Scene;
 import javafx.scene.control.IndexRange;
@@ -21,7 +23,6 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextArea;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
 /**
@@ -34,46 +35,32 @@ public class Controller extends UnicastRemoteObject implements Observer {
 		this.primaryStage = primaryStage;
 	}
 
+	// Server side variables.
 	private EditorEngine remoteEngine;
 	private Client restClient;
 	private final String URL="http://localhost:8080/editor";
-	private String command;
+
+	// GUI variables.
 	private BorderPane root;
-
 	private TextArea inputArea;
-	private Text outputArea;
+	private TextArea outputArea;
 
+	// my variables.
+	private WebTarget weburl;    // the target rest server.
+	private Response rp,rpt,rps; // responses from the rest server.
+	private Integer[] sl= new Integer[2];  // used to get selection parameters in one object.
+	private boolean flag=true;   // true will mean that controller is NOT making a setText call.
+
+	/* On initialisation, controller configures itself as a rest client on target URL,
+	 * and sends an init msg to the server, who has time to configure itself if not up yet,
+	 * and register itself in the RMI registry. Then the controller looks in the RMI registry
+	 * to register itself as an Observer of the server.
+	 */
 	public Controller() throws RemoteException{
 		restClient = ClientBuilder.newClient();
-	}
-
-	public void buildGUI() {
-		root = new BorderPane();
-		buildMenus();
-		try{
-			buildTexts();
-		}catch(RemoteException e){
-			System.err.println("The communication with the rmiRegistry or the engine seems to be broken: verify the registry and engine are up and registered.");
-			e.printStackTrace();
-		}
-
-		primaryStage.setTitle("SimpleEditor");
-		primaryStage.setScene(new Scene(root, 300, 275));
-	}
-
-	private void buildTexts() throws RemoteException {
-		inputArea = new TextArea();
-		/*try{
-			inputArea.setText(remoteEngine.contents());
-		}catch (RemoteException e){
-			e.printStackTrace();
-		}*/
-		WebTarget contentsTarget = restClient.target(URL).path("/contents");
-		Response resp = contentsTarget.request().get();
-		if(resp.getStatus()!=200){
-			throw new RuntimeException();
-		}
-		inputArea.setText((String) resp.getEntity());
+		weburl = restClient.target(URL);
+		rp = weburl.path("/init").request().get();
+		rp.close();
 		if (System.getSecurityManager() == null)
 			System.setSecurityManager(new SecurityManager());
 		try {
@@ -84,47 +71,73 @@ public class Controller extends UnicastRemoteObject implements Observer {
 			System.err.println("The communication with the rmiRegistry or the engine seems to be broken: verify the registry and engine are up and registered.");
 			ex.printStackTrace();
 		};
-		inputArea.setStyle("-fx-text-fill: blue");
+	}
+
+	public void buildGUI() {
+		root = new BorderPane();
+		buildMenus();
+		buildTexts();
+
+		primaryStage.setTitle("SimpleEditor");
+		primaryStage.setScene(new Scene(root, 300, 275));
+	}
+
+	private void buildTexts(){
+		inputArea = new TextArea();
+		/*try{
+			inputArea.setText(remoteEngine.contents());
+		}catch (RemoteException e){
+			e.printStackTrace();
+		}*/
+		//rp = weburl.path("/contents").request().get();
+		/*if(resp.getStatus()!=200){
+			throw new RuntimeException();
+		}*/
+		//inputArea.setText((String) rp.getEntity());
+		//rp.close();
+		inputArea.setText(weburl.path("/contents").request().get(String.class));
+		inputArea.setStyle("-fx-text-fill: green");
 		inputArea.setEditable(false);
-		inputArea.selectionProperty().addListener((obsValue,oldRange,newRange) -> getSelection(newRange));
+		
+		//inputArea.selectionProperty().addListener((obsValue,oldRange,newRange) -> getSelection(newRange));
 		inputArea.setOnKeyTyped(keyEvent -> getTypedKey(keyEvent));
 		
 
-		outputArea = new Text();
-		outputArea.setText("Results go here");
+		outputArea = new TextArea();
+		outputArea.setStyle("-fx-text-fill: red");
+		outputArea.setText("");
 		root.setCenter(inputArea);
 		root.setBottom(outputArea);
-
 	}
 
 	private void getTypedKey(KeyEvent keyEvent) {
-		Logger.getGlobal().info(keyEvent.getCharacter());
+		//Logger.getGlobal().info(keyEvent.toString());
 
-		WebTarget contentsTarget = restClient.target(URL).path("/insert");
-		Response resp = contentsTarget.request().post(Entity.entity(keyEvent.getCharacter(), MediaType.APPLICATION_JSON));
-		if(resp.getStatus()!=200){
+		rpt = weburl.path("/insert").request()
+		    .post(Entity.entity(keyEvent.getCharacter(), MediaType.TEXT_PLAIN));
+		rpt.close();
+		/*if(resp.getStatus()!=200){
 			throw new RuntimeException();
-		}
-		/*try {
-			remoteEngine.insert(keyEvent.getCharacter());
-		} catch (RemoteException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}*/
 	}
 
 	private void getSelection(IndexRange newRange) {
-		Logger.getGlobal().info(String.format("Start %d, end %d",newRange.getStart(),newRange.getLength()));
-		/*try {
-			remoteEngine.setSelection(newRange.getStart(),newRange.getLength());
-		} catch (RemoteException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}*/
+	    	Logger.getGlobal().info(String.format("Start %d, end %d",newRange.getStart(),newRange.getLength()));	    
+	    	sl[0]= newRange.getStart();
+	    	sl[1]= newRange.getLength();
+	    	rps = weburl.path("/setSelection").request()
+	    			.post(Entity.entity(sl, MediaType.APPLICATION_JSON));
+	    	rps.close();
 	}
 
 	private void buildMenus() {
+		
 		MenuBar menuBar = new MenuBar();
+		
+		Menu fileMenu = new Menu("File");
+		MenuItem exitMenuItem = new MenuItem("Exit");
+		exitMenuItem.setOnAction(event -> this.exit());
+		
 		Menu editMenu = new Menu("Edit");
 		// Add a menu item to cut
 		MenuItem addMenuItem = new MenuItem("Cut");
@@ -153,41 +166,43 @@ public class Controller extends UnicastRemoteObject implements Observer {
 		menuBar.getMenus().add(editMenu);
 		root.setTop(menuBar);
 	}
+	
+	private void exit(){
+		try{
+			remoteEngine.removeObserver((Observer) this);
+		}catch(RemoteException e){
+			System.err.println("Unable to remove from the RMI registry!");
+		}
+	}
 
 	private void evaluate() {
-		/*try {
-			remoteEngine.evaluate();
-		} catch (RemoteException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}*/
+		/*rp = weburl.path("/evaluate").request()
+			    .get();
+		//outputArea.setText(((SEXP)rp.getEntity()).toString());
+		outputArea.setText((String)rp.getEntity());
+		rp.close();*/
+		outputArea.setText(weburl.path("/evaluate").request().get(String.class));
 	}
 
 	private void paste() {
-		/*try {
-			remoteEngine.paste();
-		} catch (RemoteException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}*/
+		getSelection(inputArea.getSelection());
+		rp = weburl.path("/paste").request()
+			    .get();
+		rp.close();
 	}
 
 	private void copy() {
-		/*try {
-			remoteEngine.copy();
-		} catch (RemoteException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}*/
+		getSelection(inputArea.getSelection());
+		rp = weburl.path("/copy").request()
+			    .get();
+		rp.close();
 	}
 
 	private void cut() {
-		/*try {
-			remoteEngine.cut();
-		} catch (RemoteException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}*/
+		getSelection(inputArea.getSelection());
+		rp = weburl.path("/cut").request()
+			    .get();
+		rp.close();
 	}
 
 	public void run() {
@@ -197,7 +212,9 @@ public class Controller extends UnicastRemoteObject implements Observer {
 
 	@Override
 	public void textUpdate(String text) throws RemoteException {
+		flag=false;
 		inputArea.setText(text);
+		flag=true;
 	}
 
 	@Override

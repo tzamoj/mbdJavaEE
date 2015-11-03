@@ -14,11 +14,19 @@ import editorUser.Observer;
 public class EditorEngineImpl implements EditorEngine {
 	
 	public EditorEngineImpl(){
-		EngineSingleton.getInstance().init();
+		EngineSingleton.getInstance();
+	}
+	
+	@GET
+	@Path("/init")
+	@Produces(MediaType.TEXT_PLAIN)
+	public Response init(){
+		// Do nothing, but the constructor will be called and singleton registered in the RMIregistry.
+		return Response.ok().build();
 	}
 	
 	//@Override
-	@POST
+	@GET
 	@Path("/cut")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response cut() {
@@ -27,7 +35,7 @@ public class EditorEngineImpl implements EditorEngine {
 	}
 
 	//@Override
-	@POST
+	@GET
 	@Path("/copy")
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response copy() {
@@ -48,19 +56,28 @@ public class EditorEngineImpl implements EditorEngine {
 	@POST
 	@Path("/setSelection")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response setSelection(Integer start, Integer length) {
-		EngineSingleton.getInstance().setSelection(start, length);
-		return Response.ok().build();
+	public Response setSelection(final int[] selection) {
+		//System.out.println("Selection parameters "+selection[0]+" "+selection[1]);
+		try{ 
+			return Response.ok().build();
+		}finally{
+			EngineSingleton.getInstance().setSelection(selection[0], selection[1]);
+		}
+		
 	}
 	
 	//@Override
 	@POST
 	@Path("/insert")
-	@Consumes(MediaType.APPLICATION_JSON)
-	@Produces(MediaType.APPLICATION_JSON)
+	@Consumes(MediaType.TEXT_PLAIN)
+	//@Produces(MediaType.APPLICATION_JSON)
 	public Response insert(final String s) {
-		EngineSingleton.getInstance().insert(s);
-		return Response.ok().build();
+		try{
+			return Response.noContent().build();
+		}
+		finally{
+			EngineSingleton.getInstance().insert(s);
+		}
 	}
 
 	//@Override
@@ -74,10 +91,9 @@ public class EditorEngineImpl implements EditorEngine {
 	//@Override
 	@GET
 	@Path("/evaluate")
-	@Produces(MediaType.APPLICATION_JSON)
+	@Produces(MediaType.TEXT_PLAIN)
 	public Response evaluate(){
-		EngineSingleton.getInstance().evaluate();
-		return Response.ok().build();
+		return Response.ok(EngineSingleton.getInstance().evaluate()).build();
 	}
 	
 	@Override
