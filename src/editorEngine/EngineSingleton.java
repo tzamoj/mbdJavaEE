@@ -16,7 +16,8 @@ import javax.script.ScriptException;
 import org.renjin.eval.EvalException;
 import org.renjin.parser.ParseException;
 
-/*
+/*By Thomas Zamojski, Nov 6, 2015
+ * 
  * The EngineSingleton is a singleton whose purpose is to store and manipulate the data required for
  * the editor. It is fired up when the first controller is initiated, and is removed when there is no more 
  * controllers (observers). It registers itself in the RMI registry to notify observers when its state has
@@ -56,7 +57,6 @@ public class EngineSingleton implements EditorEngine {
 			renjManager = new ScriptEngineManager();
 			renj = renjManager.getEngineByName("Renjin");
 			sb = new StringBuilder();
-		    // Throw the null engine error
 			
 		}
 		return instance;
@@ -84,7 +84,8 @@ public class EngineSingleton implements EditorEngine {
 
 	public void setSelection(Integer start, Integer length) {
 		if(textFlag){
-			//Ignore the call.
+			// Ignore the call. This is to avoid setText to call infinite selection notification.
+			// In this version, not needed anymore.
 		}
 		else{
 			selectionStart = start.intValue();
@@ -109,7 +110,6 @@ public class EngineSingleton implements EditorEngine {
 		return contents.toString();
 	}
 	
-	// should test that if selectionLength==0 then nothing is done.
 	public void deleteSelection(){
 		contents.delete(selectionStart, selectionStart+selectionLength);
 		unSelect();
@@ -177,6 +177,9 @@ public class EngineSingleton implements EditorEngine {
 			}
 	}
 	
+	// In this version, selection notifications are disabled. Otherwise, it sends a huge number of notifications and
+	// rest requests. Another solution would be to get less active synchronisation between the clients and server when
+	// selecting text.
 	private void selectionNotify(){
 		/* We remove selectionNotify since this feature is over reactive at the moment.
 		for (Observer o : obs)

@@ -1,34 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="lib" path="/DistributedREditor/libs/activation-1.1.1.jar"/>
-	<classpathentry kind="lib" path="/DistributedREditor/libs/async-http-servlet-3.0-3.0.13.Final.jar"/>
-	<classpathentry kind="lib" path="/DistributedREditor/libs/commons-codec-1.6.jar"/>
-	<classpathentry kind="lib" path="/DistributedREditor/libs/commons-io-2.1.jar"/>
-	<classpathentry kind="lib" path="/DistributedREditor/libs/commons-logging-1.1.3.jar"/>
-	<classpathentry kind="lib" path="/DistributedREditor/libs/hamcrest-core-1.3.jar"/>
-	<classpathentry kind="lib" path="/DistributedREditor/libs/httpclient-4.3.6.jar"/>
-	<classpathentry kind="lib" path="/DistributedREditor/libs/httpcore-4.3.3.jar"/>
-	<classpathentry kind="lib" path="/DistributedREditor/libs/jackson-core-asl-1.9.12.jar"/>
-	<classpathentry kind="lib" path="/DistributedREditor/libs/jackson-jaxrs-1.9.12.jar"/>
-	<classpathentry kind="lib" path="/DistributedREditor/libs/jackson-mapper-asl-1.9.12.jar"/>
-	<classpathentry kind="lib" path="/DistributedREditor/libs/jackson-xc-1.9.12.jar"/>
-	<classpathentry kind="lib" path="/DistributedREditor/libs/jboss-annotations-api_1.2_spec-1.0.0.Final.jar"/>
-	<classpathentry kind="lib" path="/DistributedREditor/libs/jboss-jaxrs-api_2.0_spec-1.0.0.Final.jar"/>
-	<classpathentry kind="lib" path="/DistributedREditor/libs/jboss-logging-3.1.4.GA.jar"/>
-	<classpathentry kind="lib" path="/DistributedREditor/libs/jboss-servlet-api_3.1_spec-1.0.0.Final.jar"/>
-	<classpathentry kind="lib" path="/DistributedREditor/libs/jcip-annotations-1.0.jar"/>
-	<classpathentry kind="lib" path="/DistributedREditor/libs/junit-4.11.jar"/>
-	<classpathentry kind="lib" path="/DistributedREditor/libs/resteasy-client-3.0.13.Final.jar"/>
-	<classpathentry kind="lib" path="/DistributedREditor/libs/resteasy-jackson-provider-3.0.13.Final.jar"/>
-	<classpathentry kind="lib" path="/DistributedREditor/libs/resteasy-jaxrs-3.0.13.Final.jar"/>
-	<classpathentry kind="lib" path="/DistributedREditor/libs/resteasy-undertow-3.0.13.Final.jar"/>
-	<classpathentry kind="lib" path="/DistributedREditor/libs/undertow-core-1.2.12.Final.jar"/>
-	<classpathentry kind="lib" path="/DistributedREditor/libs/undertow-servlet-1.2.12.Final.jar"/>
-	<classpathentry kind="lib" path="/DistributedREditor/libs/xnio-api-3.3.1.Final.jar"/>
-	<classpathentry kind="lib" path="/DistributedREditor/libs/xnio-nio-3.3.1.Final.jar"/>
+	<classpathentry kind="lib" path="/Editor/lib/activation-1.1.1.jar"/>
+	<classpathentry kind="lib" path="/Editor/lib/async-http-servlet-3.0-3.0.13.Final.jar"/>
+	<classpathentry kind="lib" path="/Editor/lib/commons-codec-1.6.jar"/>
+	<classpathentry kind="lib" path="/Editor/lib/commons-io-2.1.jar"/>
+	<classpathentry kind="lib" path="/Editor/lib/commons-logging-1.1.3.jar"/>
+	<classpathentry kind="lib" path="/Editor/lib/hamcrest-core-1.3.jar"/>
+	<classpathentry kind="lib" path="/Editor/lib/httpclient-4.3.6.jar"/>
+	<classpathentry kind="lib" path="/Editor/lib/httpcore-4.3.3.jar"/>
+	<classpathentry kind="lib" path="/Editor/lib/jackson-core-asl-1.9.12.jar"/>
+	<classpathentry kind="lib" path="/Editor/lib/jackson-jaxrs-1.9.12.jar"/>
+	<classpathentry kind="lib" path="/Editor/lib/jackson-mapper-asl-1.9.12.jar"/>
+	<classpathentry kind="lib" path="/Editor/lib/jackson-xc-1.9.12.jar"/>
+	<classpathentry kind="lib" path="/Editor/lib/jboss-annotations-api_1.2_spec-1.0.0.Final.jar"/>
+	<classpathentry kind="lib" path="/Editor/lib/jboss-jaxrs-api_2.0_spec-1.0.0.Final.jar"/>
+	<classpathentry kind="lib" path="/Editor/lib/jboss-logging-3.1.4.GA.jar"/>
+	<classpathentry kind="lib" path="/Editor/lib/jboss-servlet-api_3.1_spec-1.0.0.Final.jar"/>
+	<classpathentry kind="lib" path="/Editor/lib/jcip-annotations-1.0.jar"/>
+	<classpathentry kind="lib" path="/Editor/lib/junit-4.11.jar"/>
+	<classpathentry kind="lib" path="/Editor/lib/resteasy-client-3.0.13.Final.jar"/>
+	<classpathentry kind="lib" path="/Editor/lib/resteasy-jackson-provider-3.0.13.Final.jar"/>
+	<classpathentry kind="lib" path="/Editor/lib/resteasy-jaxrs-3.0.13.Final.jar"/>
+	<classpathentry kind="lib" path="/Editor/lib/resteasy-undertow-3.0.13.Final.jar"/>
+	<classpathentry kind="lib" path="/Editor/lib/undertow-core-1.2.12.Final.jar"/>
+	<classpathentry kind="lib" path="/Editor/lib/undertow-servlet-1.2.12.Final.jar"/>
+	<classpathentry kind="lib" path="/Editor/lib/xnio-api-3.3.1.Final.jar"/>
+	<classpathentry kind="lib" path="/Editor/lib/xnio-nio-3.3.1.Final.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="/usr/lib/jvm/java-8-oracle/lib/javafx-mx.jar"/>
 	<classpathentry kind="lib" path="/usr/lib/jvm/java-8-oracle/jre/lib/ext/jfxrt.jar"/>
+	<classpathentry kind="lib" path="/Editor/lib/renjin-script-engine-0.7.0-RC7-jar-with-dependencies.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

@@ -10,13 +10,14 @@ import javax.ws.rs.core.Response;
 
 import editorUser.Observer;
 
-/* 
+/* By Thomas Zamojski, Nov 6, 2015
+ * 
  * The EditorEngineImpl has the role of a communication intermediary between a controller and the 
  * EditorSingleton. It receives http requests from the controller, and simply invoke the right method
  * from the singleton.
  */
 @Path("/editor")
-public class EditorEngineImpl { //implements EditorEngine {
+public class EditorEngineImpl {
 	
 	public EditorEngineImpl(){
 		EngineSingleton.getInstance();
@@ -86,7 +87,8 @@ public class EditorEngineImpl { //implements EditorEngine {
 		return Response.ok(EngineSingleton.getInstance().evaluate()).build();
 	}
 	
-	/*@Override
+	/* Not needed anymore, only the singleton registers to RMI registry.
+	 * @Override
 	public void addObserver(Observer o){
 		//EngineSingleton.getInstance().addObserver(o);
 	}

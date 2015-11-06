@@ -6,7 +6,8 @@ import java.util.logging.Logger;
 import org.jboss.resteasy.plugins.server.undertow.UndertowJaxrsServer;
 import io.undertow.Undertow;
 
-/**
+/**By Thomas Zamojski, Nov 6, 2015
+ * 
  * RESTfull microservice, based on JAX-RS and JBoss Undertow
  *
  */
@@ -33,12 +34,6 @@ public class RestServer {
         }catch(Exception e){
         	e.printStackTrace();
         }
-        
-   
-        
-        // Could launch Singleton, Renjin and persistance, but for efficiency better do it if there is at least one client.  
-        //EngineSingleton.getInstance();
-        //logger.info("Singleton is up");
     }
 }
 

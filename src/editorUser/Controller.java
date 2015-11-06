@@ -25,7 +25,8 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 
-/**
+/**By Thomas Zamojski, Nov 6, 2015
+ * 
  * The controller's purpose is to manage the flow on the client side. It adds/removes itself as an observer
  * via RMI and all other requests are HTTP requests. 
  */
@@ -116,13 +117,10 @@ public class Controller extends UnicastRemoteObject implements Observer {
 			rp.close();
 			rpFlag=true;
 		}
-		/*if(resp.getStatus()!=200){
-			throw new RuntimeException();
-		}*/
 	}
 
 	private void getSelection(IndexRange newRange) {
-	    	Logger.getGlobal().info(String.format("Start %d, end %d",newRange.getStart(),newRange.getLength()));	    
+	        //Logger.getGlobal().info(String.format("Start %d, end %d",newRange.getStart(),newRange.getLength()));	    
 	    	sl[0]= newRange.getStart();
 	    	sl[1]= newRange.getLength();
 	    	if(rpFlag){
@@ -180,12 +178,6 @@ public class Controller extends UnicastRemoteObject implements Observer {
 	}
 
 	private void evaluate() {
-		/*rp = weburl.path("/evaluate").request()
-			    .get();
-		//outputArea.setText(((SEXP)rp.getEntity()).toString());
-		outputArea.setText((String)rp.getEntity());
-		rp.close();*/
-		//getSelection(inputArea.getSelection());
 		if(rpFlag){
 			rpFlag=false;
 			outputArea.setText(weburl.path("/evaluate").request().get(String.class));
@@ -194,7 +186,6 @@ public class Controller extends UnicastRemoteObject implements Observer {
 	}
 
 	private void paste() {
-		//getSelection(inputArea.getSelection());
 		if(rpFlag){
 			rpFlag=false;
 			rp = weburl.path("/paste").request()
@@ -205,7 +196,6 @@ public class Controller extends UnicastRemoteObject implements Observer {
 	}
 
 	private void copy() {
-		//getSelection(inputArea.getSelection());
 		if(rpFlag){
 			rpFlag=false;
 			rp = weburl.path("/copy").request()
@@ -216,7 +206,6 @@ public class Controller extends UnicastRemoteObject implements Observer {
 	}
 
 	private void cut() {
-		//getSelection(inputArea.getSelection());
 		if(rpFlag){
 			rpFlag=false;
 			rp = weburl.path("/cut").request()

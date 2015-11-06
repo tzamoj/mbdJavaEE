@@ -1,4 +1,5 @@
-/**
+/**By Thomas Zamojski, Nov 6, 2015
+ * 
  * The interface for the remote methods of the Engine. Pertains to the observer pattern. 
  */
 
@@ -8,7 +9,6 @@ import editorUser.Observer;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
-//import javax.ws.rs.core.Response;
 
 
 public interface EditorEngine extends Remote {
