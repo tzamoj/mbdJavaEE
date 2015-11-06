@@ -1,19 +1,15 @@
 /**
- * The interface for the editorEngine. Its functionalities include
- *  - Editing: usual text editing and selection handling.
- *  - Rcode: execute R code via evaluate
- *  - Subject: subject in an Observer pattern.
- * 
+ * The interface for the remote methods of the Engine. Pertains to the observer pattern. 
  */
 
 package editorEngine;
 
+import editorUser.Observer;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
-import javax.ws.rs.core.Response;
+//import javax.ws.rs.core.Response;
 
-import editorUser.Observer;
 
 public interface EditorEngine extends Remote {
 //  void cut() throws RemoteException;

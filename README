@@ -1,3 +1,17 @@
-Reason to drop the listener on selectionProperty():
-  Selecting with the mouse a part of the text leads to several (a lot) of modification on the selectionProperty(), which would trigger the listener, in turn sending data to the server, in turn sending notifications to all observers. This results in a huge waste of resource, and in a real situation would be terribly inefficient.
-  As is implemented, there is no listener at all, and the selection is sent to the server only when an action such as cut is performed. A better solution would be to have a less excited listener, i.e. one that would send data to the server less frequently, allowing for multiple modification on selection to happen for a single trigger.
+Author: Thomas Zamojski
+Date: November 6, 2015
+
+Subject: Project for the client/server and JavaEE courses in the master Big Data 2015/16.
+Name: Editor
+
+The project consists of two parts: the server and the client. They are linked by an interface:
+ - The EditorEngine java interface part of the server.
+ - The REST interface, described in the documentation.
+
+The server side is found in editoEngine folders, and the client part in editorUser folders. 
+
+src folder has sources, bin binaries, doc the info files, lib for library jars.
+
+Also included are some dotfiles created by eclipse to run the program properly.
+
+For information about the usage and all can be found in doc/info.pdf

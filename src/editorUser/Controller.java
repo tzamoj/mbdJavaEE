@@ -1,5 +1,6 @@
 package editorUser;
 
+import editorEngine.EditorEngine;
 import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
@@ -14,7 +15,6 @@ import javax.ws.rs.core.Response;
 
 import org.renjin.sexp.SEXP;
 
-import editorEngine.EditorEngine;
 import javafx.scene.Scene;
 import javafx.scene.control.IndexRange;
 import javafx.scene.control.Menu;
@@ -26,7 +26,8 @@ import javafx.scene.layout.BorderPane;
 import javafx.stage.Stage;
 
 /**
- * Created by plouzeau on 2015-10-01.
+ * The controller's purpose is to manage the flow on the client side. It adds/removes itself as an observer
+ * via RMI and all other requests are HTTP requests. 
  */
 public class Controller extends UnicastRemoteObject implements Observer {
 
@@ -39,6 +40,7 @@ public class Controller extends UnicastRemoteObject implements Observer {
 	private EditorEngine remoteEngine;
 	private Client restClient;
 	private final String URL="http://localhost:8080/editor";
+	private WebTarget weburl;    // the target rest server.
 
 	// GUI variables.
 	private BorderPane root;
@@ -46,8 +48,8 @@ public class Controller extends UnicastRemoteObject implements Observer {
 	private TextArea outputArea;
 
 	// my variables.
-	private WebTarget weburl;    // the target rest server.
-	private Response rp,rpt,rps; // responses from the rest server.
+	private Response rp; // responses from the rest server.
+	private boolean rpFlag=true; // True if connection is free.
 	private Integer[] sl= new Integer[2];  // used to get selection parameters in one object.
 	private boolean flag=true;   // true will mean that controller is NOT making a setText call.
 
@@ -59,8 +61,12 @@ public class Controller extends UnicastRemoteObject implements Observer {
 	public Controller() throws RemoteException{
 		restClient = ClientBuilder.newClient();
 		weburl = restClient.target(URL);
-		rp = weburl.path("/init").request().get();
-		rp.close();
+		if(rpFlag){
+			rpFlag=false;
+			rp = weburl.path("/init").request().get();
+			rp.close();
+			rpFlag=true;
+		}
 		if (System.getSecurityManager() == null)
 			System.setSecurityManager(new SecurityManager());
 		try {
@@ -83,28 +89,19 @@ public class Controller extends UnicastRemoteObject implements Observer {
 	}
 
 	private void buildTexts(){
+		// On initialisation, request the content of the buffer on server.
 		inputArea = new TextArea();
-		/*try{
-			inputArea.setText(remoteEngine.contents());
-		}catch (RemoteException e){
-			e.printStackTrace();
-		}*/
-		//rp = weburl.path("/contents").request().get();
-		/*if(resp.getStatus()!=200){
-			throw new RuntimeException();
-		}*/
-		//inputArea.setText((String) rp.getEntity());
-		//rp.close();
 		inputArea.setText(weburl.path("/contents").request().get(String.class));
-		inputArea.setStyle("-fx-text-fill: green");
+		inputArea.setStyle("-fx-text-fill: green"); // input text is green
 		inputArea.setEditable(false);
 		
-		//inputArea.selectionProperty().addListener((obsValue,oldRange,newRange) -> getSelection(newRange));
+		// Listeners on mouse and keyboard
+		inputArea.selectionProperty().addListener((obsValue,oldRange,newRange) -> getSelection(newRange));
 		inputArea.setOnKeyTyped(keyEvent -> getTypedKey(keyEvent));
 		
-
+		// output area is for the renjin evaluation string buffer.
 		outputArea = new TextArea();
-		outputArea.setStyle("-fx-text-fill: red");
+		outputArea.setStyle("-fx-text-fill: red"); // output text is red
 		outputArea.setText("");
 		root.setCenter(inputArea);
 		root.setBottom(outputArea);
@@ -112,10 +109,13 @@ public class Controller extends UnicastRemoteObject implements Observer {
 
 	private void getTypedKey(KeyEvent keyEvent) {
 		//Logger.getGlobal().info(keyEvent.toString());
-
-		rpt = weburl.path("/insert").request()
-		    .post(Entity.entity(keyEvent.getCharacter(), MediaType.TEXT_PLAIN));
-		rpt.close();
+		if(rpFlag){ // Assume that it is true, as it should be
+			rpFlag=false;
+			rp = weburl.path("/insert").request()
+					.post(Entity.entity(keyEvent.getCharacter(), MediaType.TEXT_PLAIN));
+			rp.close();
+			rpFlag=true;
+		}
 		/*if(resp.getStatus()!=200){
 			throw new RuntimeException();
 		}*/
@@ -125,54 +125,58 @@ public class Controller extends UnicastRemoteObject implements Observer {
 	    	Logger.getGlobal().info(String.format("Start %d, end %d",newRange.getStart(),newRange.getLength()));	    
 	    	sl[0]= newRange.getStart();
 	    	sl[1]= newRange.getLength();
-	    	rps = weburl.path("/setSelection").request()
-	    			.post(Entity.entity(sl, MediaType.APPLICATION_JSON));
-	    	rps.close();
+	    	if(rpFlag){
+			rpFlag=false;
+			rp = weburl.path("/setSelection").request()
+				.post(Entity.entity(sl, MediaType.APPLICATION_JSON));
+			rp.close();
+			rpFlag=true;
+	    	}
 	}
 
 	private void buildMenus() {
 		
 		MenuBar menuBar = new MenuBar();
-		
 		Menu fileMenu = new Menu("File");
+		Menu editMenu = new Menu("Edit");
+		
+		// Add evaluate and exit items to File menu
+		MenuItem evaluateMenuItem = new MenuItem("Evaluate");
+		fileMenu.getItems().add(evaluateMenuItem);
+		evaluateMenuItem.setOnAction(event -> this.evaluate());
+		
 		MenuItem exitMenuItem = new MenuItem("Exit");
+		fileMenu.getItems().add(exitMenuItem);
 		exitMenuItem.setOnAction(event -> this.exit());
 		
-		Menu editMenu = new Menu("Edit");
-		// Add a menu item to cut
-		MenuItem addMenuItem = new MenuItem("Cut");
+		
+		// Add cut, copy and paste to the Edit menu
+		MenuItem cutMenuItem = new MenuItem("Cut");
+		editMenu.getItems().add(cutMenuItem);
+		cutMenuItem.setOnAction(event -> this.cut());
 
-		addMenuItem.setOnAction(event -> this.cut());
-		editMenu.getItems().add(addMenuItem);
+		MenuItem copyMenuItem = new MenuItem("Copy");
+		editMenu.getItems().add(copyMenuItem);
+		copyMenuItem.setOnAction(event -> this.copy());
 
-		// Ditto for copy
-		MenuItem removeMenuItem = new MenuItem("Copy");
-		editMenu.getItems().add(removeMenuItem);
-		removeMenuItem.setOnAction(event -> this.copy());
-
-
-		// Ditto for paste
 		MenuItem pasteMenuItem = new MenuItem("Paste");
 		editMenu.getItems().add(pasteMenuItem);
 		pasteMenuItem.setOnAction(event -> this.paste());
 
-
-		// Ditto for evaluate
-		MenuItem evaluateMenuItem = new MenuItem("Evaluate");
-		editMenu.getItems().add(evaluateMenuItem);
-		evaluateMenuItem.setOnAction(event -> this.evaluate());
-
-		// Add the Edit menu
+		// Add File and Edit menus to the menuBar
+		menuBar.getMenus().add(fileMenu);
 		menuBar.getMenus().add(editMenu);
 		root.setTop(menuBar);
 	}
 	
 	private void exit(){
+		// On exit, remove myself as observer first.
 		try{
 			remoteEngine.removeObserver((Observer) this);
 		}catch(RemoteException e){
 			System.err.println("Unable to remove from the RMI registry!");
 		}
+		System.exit(0);
 	}
 
 	private void evaluate() {
@@ -181,28 +185,45 @@ public class Controller extends UnicastRemoteObject implements Observer {
 		//outputArea.setText(((SEXP)rp.getEntity()).toString());
 		outputArea.setText((String)rp.getEntity());
 		rp.close();*/
-		outputArea.setText(weburl.path("/evaluate").request().get(String.class));
+		//getSelection(inputArea.getSelection());
+		if(rpFlag){
+			rpFlag=false;
+			outputArea.setText(weburl.path("/evaluate").request().get(String.class));
+			rpFlag=true;
+		}
 	}
 
 	private void paste() {
-		getSelection(inputArea.getSelection());
-		rp = weburl.path("/paste").request()
-			    .get();
-		rp.close();
+		//getSelection(inputArea.getSelection());
+		if(rpFlag){
+			rpFlag=false;
+			rp = weburl.path("/paste").request()
+					.get();
+			rp.close();
+			rpFlag=true;
+		}
 	}
 
 	private void copy() {
-		getSelection(inputArea.getSelection());
-		rp = weburl.path("/copy").request()
-			    .get();
-		rp.close();
+		//getSelection(inputArea.getSelection());
+		if(rpFlag){
+			rpFlag=false;
+			rp = weburl.path("/copy").request()
+					.get();
+			rp.close();
+			rpFlag=true;
+		}
 	}
 
 	private void cut() {
-		getSelection(inputArea.getSelection());
-		rp = weburl.path("/cut").request()
-			    .get();
-		rp.close();
+		//getSelection(inputArea.getSelection());
+		if(rpFlag){
+			rpFlag=false;
+			rp = weburl.path("/cut").request()
+					.get();
+			rp.close();
+			rpFlag=true;
+		}
 	}
 
 	public void run() {
@@ -212,9 +233,7 @@ public class Controller extends UnicastRemoteObject implements Observer {
 
 	@Override
 	public void textUpdate(String text) throws RemoteException {
-		flag=false;
 		inputArea.setText(text);
-		flag=true;
 	}
 
 	@Override

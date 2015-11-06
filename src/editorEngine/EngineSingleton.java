@@ -1,5 +1,7 @@
 package editorEngine;
 
+import editorUser.Observer;
+import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -11,24 +13,38 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 
-import org.renjin.sexp.SEXP;
+import org.renjin.eval.EvalException;
+import org.renjin.parser.ParseException;
 
-import editorUser.Observer;
-
+/*
+ * The EngineSingleton is a singleton whose purpose is to store and manipulate the data required for
+ * the editor. It is fired up when the first controller is initiated, and is removed when there is no more 
+ * controllers (observers). It registers itself in the RMI registry to notify observers when its state has
+ * changed. Also, it brings up Renjin to evaluate R code.
+ */
 public class EngineSingleton implements EditorEngine {
+	
+	private StringBuffer contents = new StringBuffer("");
+	private String clipboard="";
+	private int selectionStart;
+	private int selectionLength;
+	private List<Observer> obs = new ArrayList<Observer>();
+	private boolean textFlag = false; // Is making a textNotify. not sure it is needed anymore.
+
+	//Renjin variables.	
 	private static ScriptEngineManager renjManager;
 	private static ScriptEngine renj;
+	private static StringBuilder sb;
+	
 	// Singleton design
 	static EngineSingleton instance = null;
 	public static EngineSingleton getInstance() {
 		if(instance==null){
 			instance = new EngineSingleton(); // create the only instance
 			
-			// Register to the RMI registry
-			if (System.getSecurityManager() == null)
-				System.setSecurityManager(new SecurityManager());
+			// Make the observer part of instance available remotely through RMI.			
 			try {
-				Registry rmiRegistry = LocateRegistry.createRegistry(9999);
+				Registry rmiRegistry = LocateRegistry.getRegistry(9999);
 				EditorEngine rmiService = (EditorEngine) UnicastRemoteObject
 						.exportObject(instance, 9999);
 				rmiRegistry.bind("engine", instance);
@@ -39,27 +55,15 @@ public class EngineSingleton implements EditorEngine {
 			// Initiate renjin
 			renjManager = new ScriptEngineManager();
 			renj = renjManager.getEngineByName("Renjin");
-			// Could throw an error if renj is null.
+			sb = new StringBuilder();
+		    // Throw the null engine error
 			
-			// Initiate persistance 
 		}
 		return instance;
 	}
 	
-	// On initialisation, register the engine to RMIregistry.
-	public void init(){		
-	}
-
-	private StringBuffer contents = new StringBuffer("");
-	private String clipboard="";
-	private int selectionStart;
-	private int selectionLength;
-	private List<Observer> obs = new ArrayList<Observer>();
-	private boolean textFlag = false;
 	
-	//@Override
 	public void cut() {
-		//System.out.println("Performing a cut from "+selectionStart+" of length "+selectionLength);
 		if(selectionLength>0){
 			copy();
 			deleteSelection();
@@ -68,20 +72,16 @@ public class EngineSingleton implements EditorEngine {
 		}
 	}
 
-	//@Override
 	public void copy() {
 		if(selectionLength>0){
 			clipboard = contents.substring(selectionStart, selectionStart+selectionLength);
 		}
 	}
 
-	//@Override
 	public void paste() { 
 		insert(clipboard);
-		//System.out.println("Pasting");
 	}
 
-	//@Override
 	public void setSelection(Integer start, Integer length) {
 		if(textFlag){
 			//Ignore the call.
@@ -97,7 +97,6 @@ public class EngineSingleton implements EditorEngine {
 		selectionLength = 0;
 	}
 
-	//@Override
 	public void insert(String s) {
 		deleteSelection(); 
 		contents.insert(selectionStart, s);
@@ -106,7 +105,6 @@ public class EngineSingleton implements EditorEngine {
 		selectionNotify();
 	}
 
-	//@Override
 	public String contents() {
 		return contents.toString();
 	}
@@ -117,13 +115,26 @@ public class EngineSingleton implements EditorEngine {
 		unSelect();
 	}
 	
-	//@Override
 	public String evaluate(){
-		try{
-			return renj.eval(contents.toString()).toString();
-		}catch (ScriptException e){
-			return "An error occured while evaluating the R code";
+		String command=""; 
+		// If there is text selected, evaluate only the selection, else evaluate the whole buffer.
+		if(selectionLength>0){
+			command = contents.substring(selectionStart, selectionStart+selectionLength);
 		}
+		else{
+			command = contents.toString();
+		}
+		try{
+			sb.append(renj.eval(command).toString()).append("\n");
+			return sb.toString();
+		}catch (ScriptException e){
+			return sb.append("Script exception\n").toString();
+		}catch (ParseException e){
+			return sb.append("An error occured while parsing the R code\n").toString();
+		}catch (EvalException e){
+			return sb.append("An error occured while evaluating the R code\n").toString();
+		}
+		
 	}
 	
 	@Override
@@ -138,27 +149,42 @@ public class EngineSingleton implements EditorEngine {
 		if(obs.contains(o)){
 			obs.remove(o);
 		}
+		// If no more observer, remove myself from RMI registry and kill myself.
+		if(obs.isEmpty()){
+			try{
+				Registry rmiRegistry = LocateRegistry.getRegistry(9999);
+				rmiRegistry.unbind("engine");
+				boolean a = UnicastRemoteObject.unexportObject((EditorEngine) instance, true);
+			}catch(RemoteException e){
+				e.printStackTrace();
+			}catch(NotBoundException e){
+				System.err.println("Singleton not bound to rmiRegistry");
+				instance=null;
+			}
+			instance=null;
+		}
 	}
 	
+	// textNotify sends the contents of the buffer to all observers.
 	private void textNotify(){
 		for (Observer o : obs)
 			try {
-				textFlag = true;
+				textFlag = true; //entering a text notification
 				o.textUpdate(this.contents());
-				textFlag = false;
+				textFlag = false; //exiting a text notification
 			} catch (RemoteException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 	}
 	
 	private void selectionNotify(){
-		/*for (Observer o : obs)
+		/* We remove selectionNotify since this feature is over reactive at the moment.
+		for (Observer o : obs)
 			try {
 				o.selectionUpdate(this.selectionStart,this.selectionLength);
 			} catch (RemoteException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
-			}*/
+			}
+			*/
 	}
 }

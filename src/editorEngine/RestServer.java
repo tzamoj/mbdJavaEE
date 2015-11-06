@@ -1,5 +1,7 @@
 package editorEngine;
 
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
 import java.util.logging.Logger;
 import org.jboss.resteasy.plugins.server.undertow.UndertowJaxrsServer;
 import io.undertow.Undertow;
@@ -22,6 +24,17 @@ public class RestServer {
         );
 
         logger.info("JAX-RS based micro-service running!");
+        
+        // Launch the RMI registry
+        if (System.getSecurityManager() == null)
+			System.setSecurityManager(new SecurityManager());
+        try{
+        	Registry rmiRegistry = LocateRegistry.createRegistry(9999);
+        }catch(Exception e){
+        	e.printStackTrace();
+        }
+        
+   
         
         // Could launch Singleton, Renjin and persistance, but for efficiency better do it if there is at least one client.  
         //EngineSingleton.getInstance();
